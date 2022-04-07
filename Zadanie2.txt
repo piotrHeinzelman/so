@@ -1,0 +1,30 @@
+Dzieñ dobry,
+
+ 
+
+Oto temat drugiego projektu:
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+ 
+
+Napisaæ zestaw 3 programów w C/C++ umo¿liwiaj¹cych wymianê krótkich wiadomoœci tekstowych przez grupê kilku u¿ytkowników:
+
+    - program administracyjny, umo¿liwiaj¹cy utworzenie lub usuniêcie kolejki komunikatów IPC Systemu V,
+    - program wysy³aj¹cy do kolejki komunikaty odczytane ze standardowego wejœcia stdin (z terminala), gdzie typ komunikatu okreœla adres odbiorcy:
+         nadaj typ
+
+    - program odbieraj¹cy z kolejki komunikaty wskazanego typu:
+         odbierz typ n
+
+ 
+
+Argument n okreœla maksymaln¹ liczbê komunikatów do odczytania z kolejki.
+
+------------------------------------------------------------------------------------------------------
+
+ 
+
+Pozdrawiam,
+
+Andrzej Wielgus
