@@ -1,0 +1,214 @@
+14.4. Przyk³ady komunikacji klient-serwer
+Poni¿ej prezentujemy implementacje dwóch schematów komunikacji z wykorzystaniem gniazd.
+Pierwszy przyk³ad pokazuje realizacjê programy serwera i klienta wykorzystuj¹ce protokó³ strumie-
+niowy w dziedzinie Uniksa. W przyk³adzie drugim prezentowany jest klient i serwer demonstruj¹ce
+model komunikacji wykorzystuj¹cy protokó³ datagramowy w dziedzinie Internetu.
+Serwer wspó³bie¿ny protoko³u strumieniowego dzia³aj¹cy w dziedzinie Uniksa.
+Serwer tworzy gniazdo strumieniowego w dziedzinie Uniksa i przydziela mu lokalny adres. Na-
+stêpnie zg³asza gotowoœæ odbierania po³¹czeñ i oczekuje na po³¹czenia klientów. Po nawi¹zaniu
+po³¹czenia serwer tworzy proces potomny, który przejmuje obs³ugê bie¿¹cego po³¹czenia. Proces
+potomny odczytuje wiadomoœæ od klienta i wypisuje na ekranie terminala. Adres serwera jest
+ustalony w kodzie poprzez nazwê œcie¿kow¹ pliku (./socket1.tmp).
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <signal.h>
+/*adres serwera*/
+#define UNIX_PATH "./socket1.tmp"
+#define MAX 80
+main(int argc, char *argv[])
+{
+int fd, newfd, pid, serverLength, clientLength;
+struct sockaddr_un clientAddr, serverAddr;
+char buf[MAX]="\0";
+/*tworzenie gniazda*/
+if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+perror("Blad socket");
+exit(1);
+}
+/*wype³nienie struktury adresowej serwera*/
+bzero((char*) &serverAddr, sizeof(serverAddr));
+serverAddr.sun_family = AF_UNIX;
+strcpy(serverAddr.sun_path, UNIX_PATH);
+serverLength = strlen(serverAddr.sun_path) +
+sizeof(serverAddr.sun_family);
+/*przydzielenie lokalnego adresu serwera*/
+if (bind(fd, (struct sockaddr *) &serverAddr, serverLength) == -1) {
+perror("Blad bind");
+exit(1);
+}
+/*zgloszenie gotowoœci odbierania po³¹czeñ*/
+listen(fd, 5);
+for (;;) {
+clientLength = sizeof(clientAddr);
+/*oczekiwanie na polaczenie klienta*/
+if ((newfd = accept(fd, (struct sockaddr *) &clientAddr,
+&clientLength)) == -1) {
+perror("Blad accept");
+15
+exit(1);
+}
+/*utworzenie procesu potomnego*/
+if ((pid = fork()) == -1) {
+perror("Blad fork");
+exit(1);
+}
+/*obsluga polaczenia przez proces potomny*/
+else if (pid == 0) {
+close(fd);
+read(newfd, buf, MAX);
+printf("\n%s %s\n", clientAddr.sun_path, buf);
+exit(0);
+}
+close(newfd);
+}
+}
+Klient protoko³u strumieniowego dzia³aj¹cy w dziedzinie Unix-a.
+Klient tworzy gniazdo strumieniowego w dziedzinie Unixa i przydziela mu lokalny adres. Nastêpnie
+nawi¹zuje po³¹czenie z serwerem i przesy³a mu wiadomoœæ. Adres serwera jest ustalony w kodzie
+poprzez nazwê œcie¿kow¹ pliku (./socket1.tmp).
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <errno.h>
+/*adres serwera*/
+#define UNIX_PATH "./socket1.tmp"
+#define MAX 80
+main(int argc, char *argv[])
+{
+int fd, serverLength, n;
+struct sockaddr_un serverAddr;
+char buf[MAX]="\0";
+if (argc != 2) {
+fprintf(stderr, "Poprawne wywolanie: %s wiadomosc\n", argv[0]);
+exit(1);
+}
+/*tworzenie gniazda*/
+if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+perror("Blad socket");
+exit(1);
+}
+/*wype³nienie struktury adresowej serwera*/
+bzero((char*) &serverAddr, sizeof(serverAddr));
+serverAddr.sun_family = AF_UNIX;
+strcpy(serverAddr.sun_path, UNIX_PATH);
+serverLength = strlen(serverAddr.sun_path) +
+sizeof(serverAddr.sun_family);
+/*nawi¹zanie po³¹czenia z serwerem*/
+if (connect(fd, (struct sockaddr *) &serverAddr, serverLength) == -1)
+16
+{
+perror("Blad connect");
+exit(1);
+}
+/*kopiowanie i wysy³anie danych*/
+strcpy(buf, argv[1]);
+n = strlen(buf);
+write(fd, buf, n);
+close(fd);
+exit(0);
+}
+Serwer iteracyjny protoko³u datagramowego dzia³aj¹cy w dziedzinie Internetu.
+Serwer tworzy gniazdo datagramowe w dziedzinie Internetu i przydziela mu lokalny adres. Nastêp-
+nie oczekuje na datagramy od klientów. Z ka¿dego datagramu odczytuje wiadomoœæ i adres na-
+dawcy oraz wypisuje na ekranie terminala.
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+/*ustalenie portu us³ugi*/
+#define SERVER_PORT 5500
+#define MAX 80
+main(int argc, char *argv[])
+{
+int fd, newfd, pid, serverLength, clientLength;
+struct sockaddr_in clientAddr, serverAddr, cAddr;
+char buf[MAX]="\0", *addr;
+/*tworzenie gniazda*/
+if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+perror("Blad socket");
+exit(1);
+}
+/*wype³nienie struktury adresowej serwera*/
+bzero((char*) &serverAddr, sizeof(serverAddr));
+serverAddr.sin_family = AF_INET;
+serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+serverAddr.sin_port = htons(SERVER_PORT);
+serverLength = sizeof(serverAddr);
+/*przydzielenie lokalnego adresu serwera*/
+if (bind(fd, (struct sockaddr *) &serverAddr, serverLength) == -1) {
+perror("Blad bind");
+exit(1);
+}
+for (;;) {
+clientLength = sizeof(clientAddr);
+/*oczekiwanie na nadejœcie datagramu*/
+if (recvfrom(fd, buf, MAX, 0, (struct sockaddr *) &clientAddr,
+&clientLength) == -1) {
+perror("Blad recvfrom");
+17
+exit(1);
+}
+/*wypisanie adresu klienta i wiadomoœci*/
+addr = inet_ntoa(clientAddr.sin_addr);
+printf("\n%s\t%s\n", addr, buf);
+}
+}
+Klient protoko³u datagramowego dzia³aj¹cy w dziedzinie Internetu.
+Klient tworzy gniazdo datagramowe w dziedzinie Internetu i przydziela mu lokalny adres. Nastêp-
+nie wpisuje do struktury adresowej adres serwera, podany w linii wywo³ania, oraz numer portu
+serwera. W obydwu przypadkach dokonuje zamiany kolejnoœci bajtów na sieciow¹. Klient wysy³a
+podan¹ wiadomoœæ w postaci datagramu na adres serwera.
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <errno.h>
+/*ustalenie portu us³ugi*/
+#define SERVER_PORT 5500
+#define MAX 80
+main(int argc, char *argv[])
+{
+int fd, serverLength, n;
+struct sockaddr_in serverAddr, clientAddr;
+char buf[MAX]="\0";
+if (argc != 3) {
+fprintf(stderr, "Poprawne wywolanie: %s adres wiadomosc\n", argv[0]);
+exit(1);
+}
+/*tworzenie gniazda*/
+if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+perror("Blad socket");
+exit(1);
+}
+/*wype³nienie struktury adresowej klienta*/
+bzero((char*) &clientAddr, sizeof(clientAddr));
+clientAddr.sin_family = AF_INET;
+clientAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+clientAddr.sin_port = htons(0);
+/*przydzielenie lokalnego adresu klienta*/
+if (bind(fd, (struct sockaddr *) &clientAddr, sizeof(clientAddr)) ==-1)
+{
+perror("Blad bind");
+exit(1);
+}
+/*przepisanie wiadomoœci do bufora*/
+strcpy(buf, argv[2]);
+n = strlen(buf);
+/*wype³nienie struktury adresowej serwera*/
+bzero((char*) &serverAddr, sizeof(serverAddr));
+18
+serverAddr.sin_family = AF_INET;
+serverAddr.sin_addr.s_addr = inet_addr(argv[1]);
+serverAddr.sin_port = htons(SERVER_PORT);
+/*wys³anie datagramu*/
+sendto(fd, buf, MAX, 0, (struct sockaddr *) &serverAddr,
+sizeof(serverAddr));
+/*zamkniêcie gniazda*/
+close(fd);
+exit(0);
+}
