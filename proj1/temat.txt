@@ -1,0 +1,37 @@
+Dzieñ dobry,
+
+ 
+
+Oto temat pierwszego projektu:
+
+------------------------------------------------------------------------
+
+Napisaæ skrypt w jêzyku pow³oki bash/zsh s³u¿¹cy do zliczania plików posiadaj¹cych podane prawa dostêpu. Postaæ wywo³ania skryptu:
+
+ 
+
+     nazwa_skryptu  katalog  prawa1  prawa2 …
+
+ 
+
+np.  skrypt  $HOME/projekt  755 644
+
+ 
+
+Skrypt poszukuje w podanej ga³êzi drzewa katalogów takich plików, które maj¹ ustawione dok³adnie takie prawa dostêpu, jak podane w linii wywo³ania w postaci numerycznej (np. 755). Skrypt powinien wypisaæ listê plików i podaæ ich liczbê dla ka¿dego argumentu prawa oddzielnie.
+
+ 
+
+Skrypty powinny zawieraæ nastêpuj¹c¹ obs³ugê b³êdów:
+
+- sygnalizowaæ b³êdy sk³adni wywo³ania (np. brak argumentów) i podaæ poprawn¹ postaæ,
+
+- sygnalizowaæ u¿ycie niepoprawnego argumentu (np. nieistniej¹cy plik),
+
+- sygnalizowaæ brak odpowiednich praw dostêpu do plików lub katalogów.
+
+------------------------------------------------------------------------
+
+Pozdrawiam,
+
+Andrzej Wielgus

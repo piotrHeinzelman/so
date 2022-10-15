@@ -1,0 +1,120 @@
+#!/bin/bash
+
+folder=$1
+shift
+
+
+help(){
+   echo "\a"
+   echo "Poprawna skadnia: prog folder prawa [,prawa]"
+   echo "np: prog /home 755 123"
+   echo ""
+}
+
+
+num_to_char(){
+case $onenum in
+ "0") echo "\-\-\-";;
+ "1") echo "\-\-x";;
+ "2") echo "\-w\-";;
+ "3") echo "\-wx";;
+ "4") echo "r\-\-";;
+ "5") echo "r\-x";;
+ "6") echo "rw\-";;
+ "7") echo "rwx";;
+ esac
+}
+
+
+
+right_to_char(){
+other=`expr $right % 10`
+tmp=`expr $right - $other`
+tmp=`expr $tmp / 10`
+
+group=`expr $tmp % 10`
+owner=`expr $tmp / 10`
+
+onenum=$other
+other=`num_to_char $onenum`
+
+onenum=$group
+group=`num_to_char $onenum`
+
+onenum=$owner
+owner=`num_to_char $onenum`
+
+echo $owner$group$other
+}
+
+
+
+if [ ! -d $folder ]
+  then
+  echo ""
+  echo "pierwszy parametr nie jest folderem."
+  help
+  exit 1
+fi
+
+if [ ! -x $folder ]
+  then
+  echo ""
+  echo "nie masz uprawnien x do tego folderu"
+  help
+  exit 2
+fi
+
+if [ ! -r $folder ]
+  then
+  echo ""
+  echo "nie masz uprawnien r do tego folderu"
+  help
+  exit 3
+fi
+
+if [ $# -lt 1 ]
+  then
+  echo ""
+  echo "troszke za malo parametrow"
+  help
+  exit 1
+fi
+
+
+while [ $1 ]
+do
+if [ 3 -eq `expr $1 : '[0-7]*'` ]
+  then
+  right=$1
+  right_char=`right_to_char $1`
+
+  echo ""
+  echo "sprawdzam folder: $folder prawa $right_char"
+  lines=`ls -oi $folder | grep $right_char | grep -o "[^ ]*$"`
+  for line
+  in $lines
+  do
+  echo $line
+  done
+
+
+  linesnum=`ls -oi $folder | grep -c $right_char`
+  echo "znaleziono: $linesnum"
+  echo "";
+
+
+
+fi
+shift
+done
+
+
+if [ ! $right ]
+ then help
+ exit 1
+fi
+
+exit
+
+
